@@ -1,0 +1,34 @@
+version: '1.0'
+
+metadata:
+  name: node-environment
+  description: Basic Node.js app with PostgreSQL
+  author: mudasir-shah
+  created_at: 2025-10-17
+
+services:
+  app:
+    image: node:18
+    container_name: node_app
+    working_dir: /usr/src/app
+    volumes:
+      - ./app:/usr/src/app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    command: ["npm", "start"]
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: devdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
