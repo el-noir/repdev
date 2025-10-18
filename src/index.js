@@ -4,6 +4,8 @@ import { Command } from "commander";
 import { upCommand } from "./cli/commands/up.js";
 import { downCommand } from "./cli/commands/down.js";
 import { statusCommand } from "./cli/commands/status.js";
+import { validateCommand } from "./cli/commands/validate.js";
+import { initCommand } from "./cli/commands/init.js";
 
 const program = new Command();
 
@@ -14,15 +16,38 @@ program.name("repdev")
 program.command("up")
     .description("Start the development environment")
     .option("-t, --template <path>", "Path to the template file")
+    .option("-p, --preset <name>", "Environment preset (e.g., mern, django)")
+    .option("-f, --force", "Force recreate containers even if running")
+    .option("-d, --dry-run", "Show intended actions without mutating state")
+    .option("-s, --services <names>", "Comma-separated list of service names to operate on")
+    .option("-c, --compose", "Generate docker-compose.yml and run docker compose up -d")
     .action(upCommand);
 
 program.command("down")
     .description("Stop and remove the development environment")
     .option("-t, --template <path>", "Path to the template file")
+    .option("-p, --preset <name>", "Environment preset (e.g., mern, django)")
+    .option("-f, --force", "Force remove running containers")
+    .option("-s, --services <names>", "Comma-separated list of service names to operate on")
+    .option("-d, --dry-run", "Show intended actions without mutating state")
+    .option("-c, --compose", "Generate docker-compose.yml and run docker compose down")
     .action(downCommand);
 
 program.command("status")
     .description("Check the status of the development environment")
     .action(statusCommand);
+
+program.command("validate")
+    .description("Validate a template file without starting containers")
+    .option("-t, --template <path>", "Path to the template file")
+    .option("-p, --preset <name>", "Environment preset (e.g., mern, django)")
+    .action(validateCommand);
+
+program.command("init")
+    .description("Create a starter repdev.yml in the current directory")
+    .option("-p, --preset <name>", "Environment preset (e.g., mern, django)")
+    .option("-l, --list", "List available presets")
+    .option("-f, --force", "Overwrite if repdev.yml already exists")
+    .action(initCommand);
 
 program.parse(process.argv);

@@ -43,3 +43,5 @@ next-env.d.ts
 .early.coverage
 
 .data/db
+
+.goal.txt

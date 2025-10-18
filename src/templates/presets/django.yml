@@ -1,0 +1,52 @@
+version: '1.0'
+metadata:
+  name: django-dev
+  description: Django + PostgreSQL
+  author: repdev
+  created_at: 2025-10-17
+
+hooks:
+  preDown:
+    - echo "Dumping DB (sample)"
+  postDown:
+    - echo "Removing temporary files (sample)"
+
+services:
+  web:
+    image: python:3.11
+    container_name: django_web
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: app.settings
+    command: ["bash", "-lc", "pip install -r requirements.txt && python manage.py runserver 0.0.0.0:8000"]
+    depends_on:
+      - db
+    wait_for:
+      type: tcp
+      host: 127.0.0.1
+      port: 5432
+      timeout: 60000
+      interval: 2000
+    hooks:
+      afterStart:
+        - echo "Running Django migrations (sample)"
+        # - docker exec django_web bash -lc "python manage.py migrate && python manage.py collectstatic --noinput"
+
+  db:
+    image: postgres:15
+    container_name: django_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    # Some Postgres images expose HEALTHCHECK; rely on container_healthy if present
+    wait_for:
+      type: container_healthy

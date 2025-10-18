@@ -1,0 +1,20 @@
+version: '1.0'
+hooks:
+    preUp:
+        - echo "preUp"
+    postUp:
+        - echo "postUp"
+services:
+    demo:
+        image: node:20
+        container_name: demo_c
+        wait_for:
+            type: http
+            url: http://localhost:9/health
+            timeout: 1000
+            interval: 200
+        hooks:
+            beforeStart:
+                - echo "beforeStart"
+            afterStart:
+                - echo "afterStart"

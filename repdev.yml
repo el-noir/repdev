@@ -1,0 +1,33 @@
+version: '1.0'
+metadata:
+  name: django-dev
+  description: Django + PostgreSQL
+  author: repdev
+  created_at: 2025-10-17
+
+services:
+  web:
+    image: python:3.11
+    container_name: django_web
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: app.settings
+    command: ["bash", "-lc", "pip install -r requirements.txt && python manage.py runserver 0.0.0.0:8000"]
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: django_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
