@@ -527,17 +527,51 @@ services:
 
 ### Network Configuration
 
+Control container networking for isolation, performance, and multi-tier architectures:
+
+**Network Modes:**
 ```yaml
 services:
   app:
-    network_mode: host  # Use host networking
-    # OR
-    network_mode: bridge  # Isolated (default)
-    # OR
-    networks:
-      - my-network
-      - shared-network
+    network_mode: host    # High performance, uses host network
+    # network_mode: bridge  # Default, isolated networking
+    # network_mode: none    # No networking
 ```
+
+**Custom Networks** (recommended for complex apps):
+```yaml
+networks:
+  frontend:
+  backend:
+  database:
+
+services:
+  web:
+    networks: [frontend]
+  api:
+    networks: [frontend, backend]
+  db:
+    networks: [database]  # Fully isolated
+```
+
+**Advanced Network Config:**
+```yaml
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+services:
+  api:
+    networks:
+      app_net:
+        ipv4_address: 172.25.0.10
+        aliases: [api-server, backend]
+```
+
+📖 **Full Guide**: [docs/NETWORK_CONFIGURATION.md](docs/NETWORK_CONFIGURATION.md)
 
 ---
 

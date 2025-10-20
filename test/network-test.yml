@@ -1,0 +1,40 @@
+version: '1.0'
+metadata:
+  name: network-test
+  description: Testing network configuration
+
+networks:
+  frontend:
+  backend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: test_web
+    networks:
+      - frontend
+    ports:
+      - "8080:80"
+  
+  api:
+    image: node:20-alpine
+    container_name: test_api
+    network_mode: host
+    environment:
+      PORT: 3000
+  
+  worker:
+    image: node:20-alpine
+    container_name: test_worker
+    networks:
+      backend:
+        ipv4_address: 172.25.0.10
+        aliases:
+          - worker-service
+          - background-worker
+    command: sleep infinity

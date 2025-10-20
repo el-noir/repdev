@@ -24,6 +24,40 @@
       },
       "additionalProperties": false
     },
+    "networks": {
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "null" },
+          {
+            "type": "object",
+            "properties": {
+              "driver": { "type": "string", "enum": ["bridge", "overlay", "host", "macvlan", "none"] },
+              "driver_opts": { "type": "object", "additionalProperties": { "type": "string" } },
+              "ipam": {
+                "type": "object",
+                "properties": {
+                  "driver": { "type": "string" },
+                  "config": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "subnet": { "type": "string" },
+                        "gateway": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "external": { "type": "boolean" },
+              "name": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
     "services": {
       "type": "object",
       "minProperties": 1,
@@ -40,8 +74,23 @@
           "env_file": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "command": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "depends_on": { "type": "array", "items": { "type": "string" } },
-          "network_mode": { "type": "string", "enum": ["bridge", "host", "none"] },
-          "networks": { "type": "array", "items": { "type": "string" } },
+          "network_mode": { "type": "string", "enum": ["bridge", "host", "none", "service:service_name", "container:container_name"] },
+          "networks": { 
+            "oneOf": [
+              { "type": "array", "items": { "type": "string" } },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "aliases": { "type": "array", "items": { "type": "string" } },
+                    "ipv4_address": { "type": "string" },
+                    "ipv6_address": { "type": "string" }
+                  }
+                }
+              }
+            ]
+          },
           "hooks": {
             "type": "object",
             "properties": {

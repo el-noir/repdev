@@ -116,34 +116,67 @@ services:
 - Commit `.env.example` with dummy values
 - Use env_file for secrets, inline environment for non-sensitive config
 
-### 5. Network Options
+### 5. Network Configuration
 
-Add network configuration to services:
+RepDev provides flexible network configuration for container isolation and communication. See [NETWORK_CONFIGURATION.md](docs/NETWORK_CONFIGURATION.md) for comprehensive guide.
 
-#### Use host networking:
+#### Quick Network Options:
+
+**Host Network Mode** (best for performance):
 ```yaml
 services:
   api:
-    network_mode: host  # Use host's network stack
+    image: node:20
+    network_mode: host  # Uses host's network stack
+    # No port mapping needed
 ```
 
-#### Use bridge (default):
+**Custom Networks** (recommended for multi-tier apps):
 ```yaml
+# Define networks at top level
+networks:
+  frontend:
+  backend:
+  database:
+
 services:
+  web:
+    image: nginx:alpine
+    networks: [frontend]
+    ports: ["80:80"]
+  
   api:
-    network_mode: bridge  # Isolated container network
+    image: node:20
+    networks: [frontend, backend]  # Bridge between tiers
+    
+  db:
+    image: postgres:15
+    networks: [database]  # Isolated from frontend
 ```
 
-#### Connect to custom networks:
+**Static IP Addresses**:
 ```yaml
+networks:
+  app_net:
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
 services:
   api:
     networks:
-      - my-network
-      - shared-network
+      app_net:
+        ipv4_address: 172.25.0.10
+        aliases:
+          - api-server
+          - backend
 ```
 
-### 5. Common Customizations by Framework
+**Available Network Modes**: `bridge` (default), `host`, `none`, `service:name`, `container:id`
+
+📖 **Full Documentation**: [docs/NETWORK_CONFIGURATION.md](docs/NETWORK_CONFIGURATION.md)
+
+### 6. Common Customizations by Framework
 
 #### MERN Stack
 - Update `./backend` and `./frontend` paths

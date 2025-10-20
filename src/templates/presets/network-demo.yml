@@ -1,0 +1,168 @@
+version: '1.0'
+
+metadata:
+  name: network-demo
+  description: Comprehensive network configuration examples
+  author: repdev
+  created_at: 2025-10-21
+
+# Define custom networks with different configurations
+networks:
+  # Simple bridge network
+  frontend:
+    driver: bridge
+  
+  # Bridge network with custom subnet
+  backend:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
+  
+  # Internal network for databases
+  database:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: repdev_db_bridge
+
+hooks:
+  preUp:
+    - echo "🌐 Starting environment with custom networks..."
+  postUp:
+    - echo "✅ Networks configured:"
+    - echo "   - Frontend Network: Public-facing services"
+    - echo "   - Backend Network: Application tier"
+    - echo "   - Database Network: Data tier (isolated)"
+
+services:
+  # Public web server (frontend network only)
+  nginx:
+    image: nginx:alpine
+    container_name: network_demo_nginx
+    networks:
+      - frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      NGINX_HOST: localhost
+      NGINX_PORT: 80
+
+  # API server (frontend + backend networks)
+  api:
+    image: node:20-alpine
+    container_name: network_demo_api
+    working_dir: /app
+    networks:
+      frontend:
+        aliases:
+          - api-server
+          - backend-api
+      backend:
+        ipv4_address: 172.25.0.10
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    command: 
+      - sh
+      - -c
+      - |
+        echo "🔧 API Server Configuration:"
+        echo "  - Frontend network: nginx can reach us"
+        echo "  - Backend network: we can reach database/redis"
+        echo "  - Static IP: 172.25.0.10"
+        npm init -y
+        npm install express
+        node -e "
+        const express = require('express');
+        const app = express();
+        app.get('/', (req, res) => res.json({ 
+          status: 'ok', 
+          message: 'API server with multi-network setup',
+          networks: ['frontend', 'backend']
+        }));
+        app.listen(3000, () => console.log('✅ API running on port 3000'));
+        "
+
+  # Background worker (backend + database networks)
+  worker:
+    image: node:20-alpine
+    container_name: network_demo_worker
+    working_dir: /app
+    networks:
+      - backend
+      - database
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    command:
+      - sh
+      - -c
+      - |
+        echo "⚙️ Background Worker Configuration:"
+        echo "  - Backend network: can receive jobs from API"
+        echo "  - Database network: direct database access"
+        echo "  - NOT on frontend: nginx cannot reach us"
+        sleep infinity
+
+  # Redis (backend network)
+  redis:
+    image: redis:alpine
+    container_name: network_demo_redis
+    networks:
+      backend:
+        aliases:
+          - cache
+          - redis-server
+    environment:
+      REDIS_MAXMEMORY: 256mb
+      REDIS_MAXMEMORY_POLICY: allkeys-lru
+
+  # PostgreSQL (database network only - most isolated)
+  postgres:
+    image: postgres:15-alpine
+    container_name: network_demo_postgres
+    networks:
+      database:
+        ipv4_address: 172.25.0.20
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: appdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Admin tool using host network mode
+  adminer:
+    image: adminer:latest
+    container_name: network_demo_adminer
+    network_mode: host
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    # Note: With host mode, this will use port 8080 on the host
+    # Make sure port 8080 is not in use, or change ADMINER_DESIGN
+
+  # Monitoring service sharing network with API
+  monitor:
+    image: alpine:latest
+    container_name: network_demo_monitor
+    network_mode: "service:api"
+    command:
+      - sh
+      - -c
+      - |
+        echo "📊 Monitor shares network with API service"
+        echo "  - Can access localhost:3000 (API's port)"
+        echo "  - Useful for sidecars and debugging"
+        sleep infinity
+
+# Note: volumes are automatically created by Docker
+# You can also define them explicitly here if needed
