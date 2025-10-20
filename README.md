@@ -37,10 +37,10 @@ npm install -g repdev
 ### Create Your First Project
 
 ```bash
-# Initialize with interactive prompts
-repdev init
+# List available presets
+repdev init --list
 
-# Or use a preset
+# Initialize with a preset (interactive prompts)
 repdev init -p mern
 
 # Start your environment
@@ -142,7 +142,7 @@ repdev init -p mern
 - **Frontend**: React (Vite)
 - **Backend**: Node.js + Express
 - **Database**: MongoDB Atlas
-- **Features**: Hot reload, auto-install deps
+- **Features**: Hot reload, auto-install deps, interactive network configuration
 
 ### 🐍 **Django**
 ```bash
@@ -150,15 +150,7 @@ repdev init -p django
 ```
 - **Framework**: Django
 - **Database**: PostgreSQL
-- **Features**: Auto migrations, static files
-
-### ⚡ **Next.js + Express**
-```bash
-repdev init -p nextjs-express
-```
-- **Frontend**: Next.js
-- **API**: Express backend
-- **Features**: SSR, API routes
+- **Features**: Auto migrations, static files, custom network support
 
 ### 🔥 **Django REST + React**
 ```bash
@@ -167,14 +159,15 @@ repdev init -p django-drf
 - **Backend**: Django REST Framework
 - **Frontend**: React
 - **Database**: PostgreSQL
+- **Features**: Full API setup, network isolation options
 
-### 🔵 **Basic Node.js**
+### 🌐 **Network Demo**
 ```bash
-repdev init -p basic-node
+repdev init -p network-demo
 ```
-- **Runtime**: Node.js + PostgreSQL
-- **Purpose**: Minimal starting point
-- **Docs**: Heavily commented template
+- **Purpose**: Multi-tier network architecture demonstration
+- **Services**: 7 containers with 3 isolated networks
+- **Features**: Shows microservices, host mode, static IPs, sidecars
 
 ---
 

@@ -195,15 +195,13 @@ services:
 #### 7. **Pre-built Presets** ✅
 **Not in original MVP - Bonus Feature!**
 
-Six production-ready presets:
+Four production-ready presets:
 - **MERN** - MongoDB + Express + React + Node.js
 - **Django** - Django + PostgreSQL
 - **Django DRF** - Django REST Framework + React + PostgreSQL
-- **Next.js + Express** - Next.js + Express API
-- **Basic Node** - Simple Node.js + PostgreSQL (heavily documented)
-- **Network Demo** - Multi-tier architecture with network isolation (NEW!)
+- **Network Demo** - Multi-tier architecture with network isolation
 
-**Impact:** Instant setup for popular stacks
+**Impact:** Instant setup for popular stacks with interactive network configuration
 
 #### 8. **Error Handling** ✅
 **Enhanced beyond MVP!**
@@ -307,7 +305,7 @@ Created comprehensive documentation:
 | **CLI Commands** | 9 |
 | **Core Modules** | 7 |
 | **Utility Modules** | 3 |
-| **Presets** | 6 |
+| **Presets** | 4 |
 | **Hook Types** | 6 |
 | **Readiness Check Types** | 3 |
 | **Network Modes** | 5 |
