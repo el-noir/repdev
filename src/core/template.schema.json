@@ -74,7 +74,7 @@
           "env_file": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "command": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "depends_on": { "type": "array", "items": { "type": "string" } },
-          "network_mode": { "type": "string", "enum": ["bridge", "host", "none", "service:service_name", "container:container_name"] },
+          "network_mode": { "type": "string" },
           "networks": { 
             "oneOf": [
               { "type": "array", "items": { "type": "string" } },
