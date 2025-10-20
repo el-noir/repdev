@@ -2,8 +2,12 @@ import Docker from 'dockerode';
 
 import { logger } from './logger.js';
 import { runHooks } from './HooksRunner.js';
+import { loadEnvFiles, mergeEnvironment } from '../utils/envFileLoader.js';
+import { handleError } from '../utils/errorHandler.js';
+import { recordContainerStart, setTemplateInfo, checkPortConflicts } from '../utils/stateManager.js';
 import http from 'http';
 import net from 'net';
+import path from 'path';
 
 const docker = new Docker();
 
@@ -20,6 +24,26 @@ export async function startContainers(config, options = { force: false, dryRun: 
         }
     } else {
         logger.info('[dry-run] Skipping Docker daemon connectivity check');
+    }
+
+    // Save template info to state
+    if (config.__repdev?.templatePath) {
+        setTemplateInfo(config.__repdev.templatePath, config.__repdev.preset);
+    }
+
+    // Check for port conflicts
+    if (!options.dryRun && !options.force) {
+        const allPorts = Object.values(config.services).flatMap(s => s.ports || []);
+        const conflicts = checkPortConflicts(allPorts);
+        
+        if (conflicts.length > 0) {
+            logger.warn('\n⚠️  Port conflicts detected:');
+            conflicts.forEach(c => {
+                logger.warn(`   Port ${c.port} already in use by ${c.container} (service: ${c.service})`);
+            });
+            logger.warn('\n💡 Use --force to recreate containers or run "repdev down" first\n');
+            throw new Error('Port conflicts detected. Use --force to override.');
+        }
     }
 
     // Global preUp hooks
@@ -89,6 +113,24 @@ export async function startContainers(config, options = { force: false, dryRun: 
             if (labelParts.length === 2) labels[labelParts[0]] = decodeURIComponent(labelParts[1]);
         }
 
+        // Load and merge environment variables
+        let finalEnv = {};
+        if (service.env_file) {
+            // Get project root (parent of repdev.yml location)
+            const projectRoot = config.__repdev?.templatePath 
+                ? path.dirname(config.__repdev.templatePath) 
+                : process.cwd();
+            
+            const envFileVars = loadEnvFiles(service.env_file, projectRoot);
+            finalEnv = mergeEnvironment(service.environment, envFileVars);
+            
+            if (Object.keys(envFileVars).length > 0) {
+                logger.info(`Loaded ${Object.keys(envFileVars).length} env variables from env_file for ${name}`);
+            }
+        } else {
+            finalEnv = service.environment || {};
+        }
+
         // Create/start container (or dry-run)
         if (options.dryRun) {
             logger.info(`[dry-run] Would create container ${service.container_name} with image ${service.image}`);
@@ -101,7 +143,7 @@ export async function startContainers(config, options = { force: false, dryRun: 
                     PortBindings: mapPorts(service.ports),
                     Binds: mapVolumes(service.volumes)
                 },
-                Env: mapEnv(service.environment),
+                Env: mapEnv(finalEnv),
                 Labels: labels
             };
             
@@ -122,6 +164,9 @@ export async function startContainers(config, options = { force: false, dryRun: 
             
             const container = await docker.createContainer(createOptions);
             await container.start();
+            
+            // Record to state
+            recordContainerStart(name, service.container_name, service);
             
             // Connect to additional networks if specified
             if (service.networks && Array.isArray(service.networks)) {

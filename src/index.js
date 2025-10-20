@@ -9,6 +9,11 @@ import { initCommand } from "./cli/commands/init.js";
 import { logsCommand } from "./cli/commands/logs.js";
 import { execCommand } from "./cli/commands/exec.js";
 import { restartCommand } from "./cli/commands/restart.js";
+import { doctorCommand } from "./cli/commands/doctor.js";
+import { setupGracefulShutdown } from "./utils/errorHandler.js";
+
+// Setup graceful shutdown
+setupGracefulShutdown();
 
 const program = new Command();
 
@@ -74,5 +79,10 @@ program.command("restart [service]")
     .option("-p, --preset <name>", "Environment preset")
     .option("-a, --all", "Restart all services")
     .action(restartCommand);
+
+program.command("doctor")
+    .description("Run system health checks")
+    .option("--ports", "Check common port availability")
+    .action(doctorCommand);
 
 program.parse(process.argv);

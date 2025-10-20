@@ -38,13 +38,15 @@ services:
       - ./backend:/app  # Customize: Change to ./server or your backend folder
     ports:
       - "3000:3000"     # Customize: Change if your backend uses different port
+    env_file:
+      - ./backend/.env
+      # Loads environment from backend/.env file
+      # Create this file with: DB_URI, JWT_SECRET, API_KEYS, etc.
     environment:
       NODE_ENV: development
       PORT: 3000
-      # Copy from backend/.env manually or use hooks to load
-      MONGO_URI: mongodb+srv://mudasir:mudasir434@cluster0.xrllrhv.mongodb.net/
-      JWT_SECRET: el-noir
-      APP_URL: http://localhost:3000
+      # Inline environment vars override env_file
+      # Remove hardcoded secrets and move to .env file!
     command: 
       - sh
       - -c

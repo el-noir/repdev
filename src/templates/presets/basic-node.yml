@@ -16,9 +16,14 @@ services:
     ports:
       - "3000:3000"
       # Customize: Change port if your app uses different port
+    env_file:
+      - .env
+      # Loads environment variables from .env file
+      # Priority: inline environment > env_file
+      # You can specify multiple files: [.env, .env.local]
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://devuser:devpass@db:5432/devdb
+      # Inline vars override env_file vars
     command:
       - sh
       - -c

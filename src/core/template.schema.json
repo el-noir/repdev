@@ -37,6 +37,7 @@
           "volumes": { "type": "array", "items": { "type": "string" } },
           "ports": { "type": "array", "items": { "type": "string" } },
           "environment": { "type": "object", "additionalProperties": { "type": ["string","number","boolean"] } },
+          "env_file": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "command": { "oneOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" } } ] },
           "depends_on": { "type": "array", "items": { "type": "string" } },
           "network_mode": { "type": "string", "enum": ["bridge", "host", "none"] },

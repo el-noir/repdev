@@ -1,0 +1,32 @@
+version: '1.0'
+metadata:
+  name: env-file-demo
+  description: Demo showing env_file usage
+  
+services:
+  app:
+    image: node:20-alpine
+    container_name: demo_app
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+    # Load environment from .env file
+    env_file:
+      - .env
+    # Inline vars override env_file
+    environment:
+      NODE_ENV: development
+    command:
+      - sh
+      - -c
+      - |
+        echo "Environment Variables:"
+        echo "DB_HOST=$DB_HOST"
+        echo "DB_PORT=$DB_PORT"
+        echo "API_KEY=$API_KEY"
+        echo "NODE_ENV=$NODE_ENV"
+        echo ""
+        echo "✅ env_file loaded successfully!"
+        tail -f /dev/null

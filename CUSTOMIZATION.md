@@ -54,13 +54,69 @@ command:
 
 #### Change environment variables:
 ```yaml
+# Option 1: Inline environment (for non-sensitive or override values)
 environment:
-  PORT: 3000           # Update port
-  MONGO_URI: ...       # Update connection string
+  PORT: 3000
   NODE_ENV: development
+
+# Option 2: Use env_file (recommended for secrets)
+env_file:
+  - .env              # Single file
+  - ./backend/.env    # Relative path
+  
+# Option 3: Multiple env files (later files override earlier)
+env_file:
+  - .env              # Base config
+  - .env.local        # Local overrides
+  - .env.production   # Environment-specific
+
+# Priority: inline environment > env_file
+# So you can set defaults in .env and override specific values inline
 ```
 
-### 4. Network Options
+### 4. Environment File (.env) Support
+
+RepDev supports loading environment variables from `.env` files:
+
+#### Create a .env file:
+```bash
+# .env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp_dev
+DB_USER=postgres
+DB_PASSWORD=secret123
+
+API_KEY=your_api_key_here
+JWT_SECRET=your_jwt_secret
+
+NODE_ENV=development
+PORT=3000
+```
+
+#### Use in repdev.yml:
+```yaml
+services:
+  backend:
+    image: node:20
+    env_file: .env  # or ./backend/.env
+    environment:
+      NODE_ENV: development  # Overrides .env value
+```
+
+#### .env File Format:
+- Supports `KEY=value` syntax
+- Handles quotes: `KEY="value"` or `KEY='value'`
+- Comments with `#`
+- Export statements: `export KEY=value`
+- Escape sequences: `\n`, `\r`, `\t`, `\\`
+
+**Best Practice:** 
+- Keep `.env` in `.gitignore`
+- Commit `.env.example` with dummy values
+- Use env_file for secrets, inline environment for non-sensitive config
+
+### 5. Network Options
 
 Add network configuration to services:
 
