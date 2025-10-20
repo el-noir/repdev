@@ -28,9 +28,9 @@ async function promptForNetworkConfiguration() {
       name: 'networkMode',
       message: 'Select network mode:',
       choices: [
-        { name: 'Bridge (default - isolated container network)', value: 'bridge' },
+        { name: 'Bridge (creates isolated network for your app - recommended)', value: 'bridge' },
         { name: 'Host (use host network stack - high performance)', value: 'host' },
-        { name: 'Custom networks (multi-tier architecture)', value: 'custom' },
+        { name: 'Custom networks (multi-tier architecture with multiple networks)', value: 'custom' },
         { name: 'None (no networking)', value: 'none' }
       ],
       default: 'bridge'
@@ -159,6 +159,30 @@ function applyNetworkConfiguration(yaml, networkConfig, presetName) {
   
   const lines = yaml.split('\n');
   const servicesIndex = lines.findIndex(line => line.trim() === 'services:');
+  
+  if (networkConfig.mode === 'bridge') {
+    // Create a single custom bridge network for the entire application
+    let networksYaml = '\nnetworks:\n';
+    networksYaml += `  app_network:\n`;
+    networksYaml += `    driver: bridge\n`;
+    
+    // Insert networks before services
+    if (servicesIndex !== -1) {
+      lines.splice(servicesIndex, 0, ...networksYaml.split('\n').slice(1, -1));
+    }
+    
+    // Add app_network to all services
+    let result = lines.join('\n');
+    const serviceMatches = [...result.matchAll(/^  \w+:\n/gm)];
+    for (let i = serviceMatches.length - 1; i >= 0; i--) {
+      const match = serviceMatches[i];
+      const insertIndex = match.index + match[0].length;
+      result = result.slice(0, insertIndex) + 
+              '    networks:\n      - app_network\n' + 
+              result.slice(insertIndex);
+    }
+    return result;
+  }
   
   if (networkConfig.mode === 'host') {
     // Add network_mode: host to all services
