@@ -1,6 +1,5 @@
 import yaml from 'js-yaml';
 
-// Convert repdev config to a docker-compose v3.9 YAML string
 export function toComposeYaml(config) {
   const compose = { version: '3.9', services: {} };
 

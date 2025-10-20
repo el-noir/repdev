@@ -7,16 +7,36 @@ import path from 'path';
 import { toComposeYaml } from '../../core/ComposeGenerator.js';
 import { exec as _exec } from 'child_process';
 import { promisify } from 'util';
+import inquirer from 'inquirer';
 const exec = promisify(_exec);
 
 function presetsDir() {
     return path.dirname(fileURLToPath(new URL('../../templates/presets/mern.yml', import.meta.url)));
 }
 
+async function promptForPreset() {
+    const dir = presetsDir();
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.yml'));
+    if (files.length === 0) {
+        logger.error('No presets available.');
+        return null;
+    }
+    const choices = files.map(f => path.basename(f, '.yml'));
+    choices.push('Skip (use default template)');
+    const answer = await inquirer.prompt([{
+        type: 'list',
+        name: 'preset',
+        message: 'Select a preset template:',
+        choices
+    }]);
+    if (answer.preset === 'Skip (use default template)') return null;
+    return path.join(dir, `${answer.preset}.yml`);
+}
+
 export async function upCommand(options){
     try {
         const defaultTemplatePath = fileURLToPath(new URL('../../templates/node_template.yml', import.meta.url));
-        // Resolve template path: explicit -t > --preset > local repdev.yml > default
+        // Resolve template path: explicit -t > --preset > local repdev.yml > prompt > default
         const localPath = path.join(process.cwd(), 'repdev.yml');
         let templatePath = options.template || null;
         if (!templatePath && options.preset) {
@@ -27,6 +47,11 @@ export async function upCommand(options){
                 return;
             }
             templatePath = presetPath;
+        }
+        // If no explicit template/preset and no local repdev.yml, prompt
+        if (!templatePath && !fs.existsSync(localPath)) {
+            const chosen = await promptForPreset();
+            if (chosen) templatePath = chosen;
         }
         if (!templatePath) templatePath = fs.existsSync(localPath) ? localPath : defaultTemplatePath;
         logger.info(`Using template: ${templatePath}`);
@@ -60,7 +85,7 @@ export async function upCommand(options){
             if (stderr) logger.info(stderr.trim());
         }
     } else {
-        await startContainers(config, { force: options.force, dryRun: options.dryRun, services: serviceFilter });
+        await startContainers(config, { force: options.force, dryRun: options.dryRun, services: serviceFilter, noWait: options.wait === false });
     }
         logger.info("✅ Environment is up and running.");
     } catch (error) {

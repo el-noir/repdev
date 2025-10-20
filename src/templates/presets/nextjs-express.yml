@@ -1,0 +1,62 @@
+version: '1.0'
+metadata:
+  name: nextjs-express
+  description: Next.js + Express API
+  author: repdev
+  created_at: 2025-10-20
+
+hooks:
+  preUp:
+    - echo "🚀 Starting Next.js + Express environment..."
+  postUp:
+    - 'echo "✅ Next.js: http://localhost:3000"'
+    - 'echo "✅ API: http://localhost:4000"'
+
+services:
+  nextjs:
+    image: node:20
+    container_name: nextjs_app
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -d "node_modules" ]; then
+          npm install
+        fi
+        npm run dev
+    depends_on:
+      - api
+
+  api:
+    image: node:20
+    container_name: nextjs_api
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -d "node_modules" ]; then
+          npm install
+        fi
+        npm run dev
+
+# Usage:
+# 1. Create /app folder with Next.js (npx create-next-app@latest app)
+# 2. Create /api folder with Express
+# 3. Run: repdev up --no-wait
+# 4. Wait for dependencies to install

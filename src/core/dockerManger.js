@@ -93,7 +93,7 @@ export async function startContainers(config, options = { force: false, dryRun: 
         if (options.dryRun) {
             logger.info(`[dry-run] Would create container ${service.container_name} with image ${service.image}`);
         } else {
-            const container = await docker.createContainer({
+            const createOptions = {
                 Image: service.image,
                 name: service.container_name,
                 Tty: true,
@@ -103,13 +103,48 @@ export async function startContainers(config, options = { force: false, dryRun: 
                 },
                 Env: mapEnv(service.environment),
                 Labels: labels
-            });
+            };
+            
+            // Add working directory if specified
+            if (service.working_dir) {
+                createOptions.WorkingDir = service.working_dir;
+            }
+            
+            // Add command if specified
+            if (service.command) {
+                createOptions.Cmd = Array.isArray(service.command) ? service.command : [service.command];
+            }
+            
+            // Add network mode if specified
+            if (service.network_mode) {
+                createOptions.HostConfig.NetworkMode = service.network_mode;
+            }
+            
+            const container = await docker.createContainer(createOptions);
             await container.start();
+            
+            // Connect to additional networks if specified
+            if (service.networks && Array.isArray(service.networks)) {
+                for (const networkName of service.networks) {
+                    try {
+                        const network = docker.getNetwork(networkName);
+                        await network.connect({ Container: container.id });
+                        logger.info(`Connected ${service.container_name} to network: ${networkName}`);
+                    } catch (err) {
+                        logger.error(`Failed to connect to network ${networkName}: ${err.message}`);
+                    }
+                }
+            }
+            
             logger.info(`Container started: ${name}`);
         }
 
-        // Readiness checks
-        await waitForService(name, service, { dryRun: options.dryRun });
+        // Readiness checks (skip if --no-wait)
+        if (!options.noWait) {
+            await waitForService(name, service, { dryRun: options.dryRun });
+        } else if (service.wait_for) {
+            logger.info(`Skipping readiness check for ${name} (--no-wait)`);
+        }
 
         // Per-service afterStart hooks
         await runHooks(`service:${name}:afterStart`, service.hooks?.afterStart, { dryRun: options.dryRun });

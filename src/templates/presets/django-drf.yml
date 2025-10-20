@@ -1,0 +1,74 @@
+version: '1.0'
+metadata:
+  name: django-drf-react
+  description: Django REST Framework + React
+  author: repdev
+  created_at: 2025-10-20
+
+hooks:
+  preUp:
+    - echo "🚀 Starting Django DRF + React environment..."
+  postUp:
+    - 'echo "✅ Django API: http://localhost:8000"'
+    - 'echo "✅ React: http://localhost:3000"'
+
+services:
+  api:
+    image: python:3.11-slim
+    container_name: drf_api
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      DJANGO_SETTINGS_MODULE: config.settings
+    command:
+      - bash
+      - -c
+      - |
+        pip install -r requirements.txt
+        python manage.py migrate
+        python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - db
+
+  frontend:
+    image: node:20
+    container_name: drf_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      REACT_APP_API_URL: http://localhost:8000
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -d "node_modules" ]; then
+          npm install
+        fi
+        npm start
+    depends_on:
+      - api
+
+  db:
+    image: postgres:15-alpine
+    container_name: drf_db
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: devdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+# Customization:
+# - Update backend/ and frontend/ paths if different
+# - Change ports if needed
+# - Add POSTGRES_* env vars to Django settings

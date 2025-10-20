@@ -1,33 +1,17 @@
 version: '1.0'
 metadata:
-  name: django-dev
-  description: Django + PostgreSQL
-  author: repdev
-  created_at: 2025-10-17
+  name: my-project
+  description: Development environment
+  author: el-noir
 
 services:
-  web:
-    image: python:3.11
-    container_name: django_web
-    working_dir: /app
-    volumes:
-      - ./app:/app
+  app:
+    image: node:20-alpine
+    container_name: my_app
     ports:
-      - "8000:8000"
-    environment:
-      DJANGO_SETTINGS_MODULE: app.settings
-    command: ["bash", "-lc", "pip install -r requirements.txt && python manage.py runserver 0.0.0.0:8000"]
-    depends_on:
-      - db
+      - "3000:3000"
 
-  db:
-    image: postgres:15
-    container_name: django_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: appdb
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+# Next steps:
+# 1. Edit this file to add your services
+# 2. Or scaffold from a preset: repdev init -p mern --force
+# 3. Run: repdev up

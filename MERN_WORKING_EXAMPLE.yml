@@ -1,29 +1,17 @@
 version: '1.0'
 metadata:
-  name: mern-dev
+  name: mern-ai-ticket-system
   description: MERN stack with MongoDB Atlas
-  author: repdev
+  author: mudasir_shah
   created_at: 2025-10-20
-
-# CUSTOMIZATION GUIDE:
-# When you run 'repdev init -p mern', you'll be prompted to customize:
-# - Backend/Frontend directories (if not ./backend and ./frontend)
-# - Ports (if not 3000 for backend, 5173 for frontend)
-# - Package manager (npm, yarn, or pnpm)
-#
-# You can also manually edit this file:
-# - Update volume paths: ./backend:/app → ./server:/app
-# - Update ports: "3000:3000" → "4000:4000"
-# - Update env vars: MONGO_URI, JWT_SECRET, etc.
-# - Change network_mode: add 'network_mode: host' to services if needed
 
 hooks:
   preUp:
     - echo "🚀 Starting MERN environment..."
   postUp:
     - echo "✅ Environment ready!"
-    - 'echo "📱 Frontend: http://localhost:5173"'
-    - 'echo "🔧 Backend: http://localhost:3000"'
+    - echo "📱 Frontend: http://localhost:5173"
+    - echo "🔧 Backend: http://localhost:3000"
   preDown:
     - echo "🧹 Stopping containers..."
   postDown:
@@ -35,9 +23,9 @@ services:
     container_name: mern_backend
     working_dir: /app
     volumes:
-      - ./backend:/app  # Customize: Change to ./server or your backend folder
+      - ./backend:/app
     ports:
-      - "3000:3000"     # Customize: Change if your backend uses different port
+      - "3000:3000"
     environment:
       NODE_ENV: development
       PORT: 3000
@@ -74,9 +62,10 @@ services:
       - sh
       - -c
       - |
-        rm -rf node_modules package-lock.json
-        echo "📦 Installing frontend dependencies..."
-        npm install
+        if [ ! -d "node_modules" ]; then
+          echo "📦 Installing frontend dependencies..."
+          npm install
+        fi
         echo "📱 Starting Vite dev server..."
         npm run dev -- --host 0.0.0.0
     depends_on:
